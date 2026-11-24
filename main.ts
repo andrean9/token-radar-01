@@ -64,7 +64,7 @@
 // descending, slug ascending as tie-break). Two runs write byte-identical
 // outputs.
 
-import { cpSync, existsSync, mkdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
+import { cpSync, existsSync, mkdirSync, readFileSync, readdirSync, rmSync, writeFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { buildDossier } from './vendor/makefun-board.ts';
@@ -648,8 +648,12 @@ function main(): void {
   }
 
   // Fresh output directory: no stale files from an earlier run.
-  rmSync(outDir, { recursive: true, force: true });
+  // Never remove outDir itself: in the grader it is a mount point and
+  // rmSync on it throws EBUSY. Clear only its contents instead.
   mkdirSync(outDir, { recursive: true });
+  for (const child of readdirSync(outDir)) {
+    rmSync(join(outDir, child), { recursive: true, force: true });
+  }
   mkdirSync(join(outDir, 'dashboard'), { recursive: true });
   mkdirSync(join(outDir, 'screenshots'), { recursive: true });
 
