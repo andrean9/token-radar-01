@@ -1,0 +1,69 @@
+:root {
+  --bg: #0b1020;
+  --surface: #121a2e;
+  --surface2: #182238;
+  --line: #26304d;
+  --text: #e8ecf4;
+  --muted: #9aa7c0;
+  --accent: #f2b33d;
+  --green: #3ddc84;
+  --red: #ff6b6b;
+}
+* { box-sizing: border-box; }
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--text);
+  font: 15px/1.55 -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+}
+.wrap { max-width: 1080px; margin: 0 auto; padding: 0 20px; }
+.hero { background: linear-gradient(180deg, #14204a, var(--bg)); padding: 36px 0 24px; border-bottom: 1px solid var(--line); }
+.kicker { color: var(--accent); letter-spacing: .14em; font-size: 12px; font-weight: 700; margin: 0 0 10px; }
+h1 { font-size: 30px; line-height: 1.2; margin: 0 0 10px; max-width: 640px; }
+.lede { color: var(--muted); max-width: 680px; margin: 0 0 18px; }
+.stats { display: flex; flex-wrap: wrap; gap: 10px; }
+.stat { background: var(--surface); border: 1px solid var(--line); border-radius: 10px; padding: 10px 14px; min-width: 140px; }
+.stat b { display: block; font-size: 20px; color: var(--accent); }
+.stat span { color: var(--muted); font-size: 12px; }
+.controls { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; padding: 18px 0 12px; }
+.controls input, .controls select {
+  background: var(--surface); color: var(--text); border: 1px solid var(--line);
+  border-radius: 8px; padding: 9px 12px; font: inherit;
+}
+.controls input { flex: 1 1 220px; }
+.count { color: var(--muted); margin: 0 0 0 auto; font-size: 13px; }
+table { width: 100%; border-collapse: collapse; }
+.board th, .board td, .calib th, .calib td { text-align: left; padding: 9px 10px; border-bottom: 1px solid var(--line); }
+.board th, .calib th { color: var(--muted); font-size: 12px; text-transform: uppercase; letter-spacing: .06em; }
+.board th[data-sort] { cursor: pointer; }
+.board th[data-sort]:hover { color: var(--accent); }
+.board tbody tr { cursor: pointer; }
+.board tbody tr:hover, .board tbody tr.active { background: var(--surface2); }
+.num { text-align: right !important; font-variant-numeric: tabular-nums; }
+.up { color: var(--green); }
+.down { color: var(--red); }
+.badge { display: inline-block; background: #2a2110; color: var(--accent); border: 1px solid #5a451a; border-radius: 20px; font-size: 11px; padding: 1px 8px; margin-left: 6px; }
+.empty { color: var(--muted); padding: 20px 0; }
+.detail { background: var(--surface); border: 1px solid var(--accent); border-radius: 12px; padding: 20px 22px; margin: 22px 0; }
+.detail h2 { margin: 0 0 4px; font-size: 22px; }
+.detail .sub { color: var(--muted); margin: 0 0 14px; }
+.detail h3 { font-size: 14px; text-transform: uppercase; letter-spacing: .06em; color: var(--accent); margin: 18px 0 8px; }
+.detail ol { margin: 0; padding-left: 20px; }
+.detail ol li { margin-bottom: 8px; }
+.model { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 10px; }
+.model div { background: var(--surface2); border: 1px solid var(--line); border-radius: 8px; padding: 10px 12px; }
+.model b { display: block; font-size: 17px; }
+.model span { color: var(--muted); font-size: 12px; }
+.detail .close { float: right; background: none; border: 1px solid var(--line); color: var(--muted); border-radius: 8px; padding: 5px 10px; cursor: pointer; font: inherit; }
+.method { padding: 26px 0 10px; border-top: 1px solid var(--line); margin-top: 26px; }
+.method h2 { font-size: 22px; margin: 0 0 10px; }
+.method h3 { font-size: 16px; margin: 22px 0 8px; }
+.method p, .method li { color: var(--muted); }
+.method strong { color: var(--text); }
+.formula { background: var(--surface); border: 1px solid var(--line); border-radius: 8px; padding: 12px 16px; color: var(--text) !important; font-size: 16px; text-align: center; }
+.note { font-size: 13px; }
+footer { border-top: 1px solid var(--line); margin-top: 24px; padding: 16px 0 32px; color: var(--muted); font-size: 13px; }
+@media (max-width: 640px) {
+  h1 { font-size: 23px; }
+  .board th:nth-child(3), .board td:nth-child(3), .board th:nth-child(4), .board td:nth-child(4) { display: none; }
+}

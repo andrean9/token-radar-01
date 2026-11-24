@@ -1,0 +1,71 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Token Radar — pre-token protocols ranked by implied value</title>
+<link rel="stylesheet" href="app.css">
+</head>
+<body>
+<header class="hero">
+  <div class="wrap">
+    <p class="kicker">TOKEN RADAR &middot; DEFI LLAMA SNAPSHOT <span id="asof"></span></p>
+    <h1>Which pre-token protocol is worth farming next?</h1>
+    <p class="lede">Every protocol that records no token, and is not a wrapped, staked or bridged product of one that trades &mdash; ranked by what its launch would be worth, each with the steps to farm it.</p>
+    <div class="stats" id="stats"></div>
+  </div>
+</header>
+<main class="wrap">
+  <section class="controls" aria-label="Board controls">
+    <input id="q" type="search" placeholder="Search name or slug&hellip;" autocomplete="off" aria-label="Search protocols">
+    <select id="category" aria-label="Filter by category"><option value="">All categories</option></select>
+    <select id="chain" aria-label="Filter by chain"><option value="">All chains</option></select>
+    <select id="sort" aria-label="Sort board">
+      <option value="rank">Sort: rank</option>
+      <option value="tvl">Sort: TVL</option>
+      <option value="implied">Sort: implied value</option>
+      <option value="change">Sort: 7-day change</option>
+    </select>
+    <p class="count" id="count"></p>
+  </section>
+  <section aria-label="Ranked board">
+    <table class="board">
+      <thead><tr>
+        <th data-sort="rank">Rank</th>
+        <th>Protocol</th>
+        <th>Category</th>
+        <th>Chains</th>
+        <th data-sort="tvl">TVL</th>
+        <th data-sort="change">7d</th>
+        <th data-sort="implied">Implied value</th>
+        <th>Score</th>
+      </tr></thead>
+      <tbody id="rows"></tbody>
+    </table>
+    <p class="empty" id="empty" hidden>No protocol matches these filters.</p>
+  </section>
+  <section id="detail" class="detail" hidden aria-label="Protocol detail"></section>
+  <section id="methodology" class="method" aria-label="Methodology">
+    <h2>Methodology</h2>
+    <p>Implied value is the entry&rsquo;s own claim, calibrated from the snapshot&rsquo;s own figures &mdash; never a hardcoded list of names. For each category, the multiple is the <strong>median mcap/TVL ratio</strong> among token-bearing protocols in the snapshot that carry mcap data (at least 3 samples, else the global median). Then:</p>
+    <p class="formula">implied value = TVL &times; multiple &times; momentum &times; maturity &times; chains</p>
+    <ul>
+      <li><strong>Value (log scale, dominant):</strong> TVL &times; multiple. Size decides the rank first; the other factors only reorder near neighbours.</li>
+      <li><strong>Momentum (weight 0.4):</strong> 1 + 0.4 &times; 7-day change, capped at &plusmn;50%. A +50% week lifts value 20%; a missing change means zero momentum.</li>
+      <li><strong>Maturity (0.9&ndash;1.1):</strong> 0.9 + 0.2 &times; days since listing, capped at 3 years. Older, large, still-tokenless protocols score higher; a missing listing date is neutral, never zero.</li>
+      <li><strong>Chains (capped):</strong> +2% per extra chain, up to 6 chains (+10% max).</li>
+    </ul>
+    <p>The score (0&ndash;100) is the log of the implied value rescaled between the board&rsquo;s min and max, so ranking by score and by implied value always agree. A protocol &ldquo;records no token&rdquo; when DefiLlama records neither a CoinGecko id nor a symbol for it &mdash; the record is not proof that no token exists.</p>
+    <h3>Calibration table &mdash; median mcap/TVL by category</h3>
+    <table class="calib">
+      <thead><tr><th>Category</th><th>Multiple</th><th>Samples</th><th>Source</th></tr></thead>
+      <tbody id="calibration"></tbody>
+    </table>
+    <p class="note">Categories with fewer than 3 token-bearing samples use the global median fallback.</p>
+  </section>
+  <footer><p>Token Radar &middot; snapshot <span id="source"></span> &middot; Static page, no network requests. Implied values are this entry&rsquo;s model output, not a prediction that a token will launch.</p></footer>
+</main>
+<script src="rows.js"></script>
+<script src="app.js"></script>
+</body>
+</html>
