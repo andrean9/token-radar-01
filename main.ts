@@ -60,6 +60,32 @@
 // on) and naming the protocol's own chains, with what each step costs and how
 // long it takes.
 //
+// WHY THE MEDIAN (not the mean): the mcap/TVL ratios the multiples come
+// from are violently skewed — on this snapshot the global mean is 5.0386
+// against a median of 0.2138, one protocol's ratio reaches 400.20, and 36
+// of the 128 ratios are above 1. A mean multiple would let a handful of
+// tiny-TVL, high-mcap outliers set the price of a whole category (CEX:
+// mean 7.8246 vs median 0.0748; Basis Trading: 5.6424 vs 0.6544; Lending:
+// 1.8349 vs 0.1324). The median is the middle protocol's ratio: it moves
+// only when the typical protocol in the category moves, and it is the
+// value a new token in that category would most plausibly resemble.
+// The sensitivity test below measures exactly what the mean would have
+// cost: re-ranking with mean multiples and comparing rank by rank.
+//
+// SENSITIVITY TEST: the ranking is re-run four times, changing one
+// modelling choice per run — mean multiples instead of median, momentum
+// off, maturity off, chains off — and each variant is compared with the
+// base ranking by Spearman rank correlation, top-10 overlap, and median
+// and maximum absolute rank move. The three factor switches test whether
+// the small factors are load-bearing; the mean switch tests the one
+// choice the whole model stands on.
+//
+// CATEGORY SUMMARY: the board rolled up by category — protocol count,
+// total TVL, total implied value and share of it, watchlist count, and
+// the leading protocol per category — shown as a panel on the dashboard
+// and recorded in board.json, so the reader sees where the value sits
+// without summing 198 rows by hand.
+//
 // DETERMINISM: no timestamps, no randomness, stable sort order (implied value
 // descending, slug ascending as tie-break). Two runs write byte-identical
 // outputs.
@@ -120,6 +146,33 @@ interface BoardRow {
   watchlist: boolean;
 }
 
+// One line of the per-category summary panel (upgrade B): the board rolled
+// up by category, so the reader can see where the implied value sits.
+interface CategorySummary {
+  category: string;
+  protocols: number;
+  total_tvl_usd: number;
+  total_implied_usd: number;
+  share_of_implied: number;
+  watchlist_count: number;
+  top_protocol_slug: string;
+  top_protocol_name: string;
+  top_protocol_rank: number;
+  top_protocol_implied_usd: number;
+}
+
+// One line of the sensitivity test (upgrade C): the base ranking re-run
+// with exactly one modelling choice changed, compared rank by rank.
+interface SensitivityEntry {
+  variant: string;
+  changed: string;
+  spearman_rank_correlation: number;
+  top10_overlap: number;
+  median_abs_rank_move: number;
+  max_abs_rank_move: number;
+  rows_moved: number;
+}
+
 // ---------------------------------------------------------------- constants
 
 // Categories whose products are bridged, wrapped or staked versions of a token
@@ -172,6 +225,17 @@ function median(values: number[]): number {
     : (sorted[mid - 1]! + sorted[mid]!) / 2;
 }
 
+// The mean of the same values. Kept beside the median on purpose: the
+// sensitivity test (upgrade C) re-runs the whole ranking with the mean in
+// place of the median, so the two central values must be computed from
+// exactly the same sample sets. On this snapshot the mean is far above the
+// median almost everywhere (global 5.0386 vs 0.2138; CEX 7.8246 vs 0.0748),
+// because a handful of ratios reach 400 while the typical protocol sits
+// near 0.2 — that skew is why the model uses the median (upgrade A).
+function mean(values: number[]): number {
+  return values.reduce((a, b) => a + b, 0) / values.length;
+}
+
 function roundTo(value: number, places: number): number {
   const factor = 10 ** places;
   return Math.round(value * factor) / factor;
@@ -219,12 +283,15 @@ function isTokenless(p: SnapshotProtocol): boolean {
 
 // Median mcap/TVL among token-bearing protocols with mcap data, per category
 // (min 3 samples) with a global fallback. Returns the global median and the
-// per-category table actually used.
-function calibrate(protocols: SnapshotProtocol[]): {
+// per-category table actually used. With useMean the same samples are
+// summarised by their mean instead — the sensitivity variant (upgrade C) —
+// so the two runs differ in exactly one choice and nothing else.
+function calibrate(protocols: SnapshotProtocol[], useMean = false): {
   globalMedian: number;
   globalSamples: number;
   byCategory: Map<string, { multiple: number; samples: number }>;
 } {
+  const central = useMean ? mean : median;
   const ratiosByCategory = new Map<string, number[]>();
   const allRatios: number[] = [];
   for (const p of protocols) {
@@ -239,11 +306,11 @@ function calibrate(protocols: SnapshotProtocol[]): {
     if (list) list.push(ratio);
     else ratiosByCategory.set(key, [ratio]);
   }
-  const globalMedian = median(allRatios);
+  const globalMedian = central(allRatios);
   const byCategory = new Map<string, { multiple: number; samples: number }>();
   for (const [category, ratios] of [...ratiosByCategory.entries()].sort()) {
     if (ratios.length >= MIN_CATEGORY_SAMPLES) {
-      byCategory.set(category, { multiple: median(ratios), samples: ratios.length });
+      byCategory.set(category, { multiple: central(ratios), samples: ratios.length });
     }
   }
   return { globalMedian, globalSamples: allRatios.length, byCategory };
@@ -251,19 +318,21 @@ function calibrate(protocols: SnapshotProtocol[]): {
 
 // ------------------------------------------------------------ score parts
 
-function momentumFactor(change7d: number | null): number {
+function momentumFactor(change7d: number | null, weight = MOMENTUM_WEIGHT): number {
   if (change7d === null) return 1;
   const capped = clamp(change7d, -MOMENTUM_CAP_PCT, MOMENTUM_CAP_PCT);
-  return 1 + MOMENTUM_WEIGHT * (capped / 100);
+  return 1 + weight * (capped / 100);
 }
 
-function maturityFactor(listedAt: string | null, asOf: string): number {
+function maturityFactor(listedAt: string | null, asOf: string, enabled = true): number {
+  if (!enabled) return 1;
   if (listedAt === null) return 1;
   const days = Math.min(daysSince(listedAt, asOf), MATURITY_CAP_DAYS);
   return MATURITY_BASE + MATURITY_SPAN * (days / MATURITY_CAP_DAYS);
 }
 
-function chainsFactor(chains: string[]): number {
+function chainsFactor(chains: string[], enabled = true): number {
+  if (!enabled) return 1;
   return 1 + CHAIN_STEP * Math.min(Math.max(chains.length - 1, 0), CHAIN_CAP_EXTRA);
 }
 
@@ -533,34 +602,48 @@ function farmPlan(p: SnapshotProtocol): string[] {
 
 // ------------------------------------------------------------------ board
 
-function buildBoard(snapshot: Snapshot): {
-  rows: BoardRow[];
-  calibration: CalibrationEntry[];
-  globalMedian: number;
-  globalSamples: number;
-} {
-  const { globalMedian, globalSamples, byCategory } = calibrate(snapshot.protocols);
-  const watchlist = new Set(snapshot.watchlist);
-  const qualifiers = snapshot.protocols.filter(isTokenless);
+// One modelling choice, named so the sensitivity test can change exactly
+// one of them at a time and leave the rest at the base values.
+interface ModelOptions {
+  useMean: boolean;
+  momentumWeight: number;
+  maturity: boolean;
+  chains: boolean;
+}
 
-  interface Scored extends SnapshotProtocol {
-    multiple: number;
-    multipleSamples: number;
-    multipleSource: 'category' | 'global';
-    momF: number;
-    matF: number;
-    chainF: number;
-    implied: number;
-  }
+const BASE_OPTIONS: ModelOptions = {
+  useMean: false,
+  momentumWeight: MOMENTUM_WEIGHT,
+  maturity: true,
+  chains: true,
+};
+
+interface Scored extends SnapshotProtocol {
+  multiple: number;
+  multipleSamples: number;
+  multipleSource: 'category' | 'global';
+  momF: number;
+  matF: number;
+  chainF: number;
+  implied: number;
+}
+
+// Score every tokenless qualifier and rank them by implied value under the
+// given modelling options. The base options are the published model; each
+// sensitivity variant (upgrade C) calls this once with a single option
+// changed, so a variant differs from the base in exactly one choice.
+function scoreAndSort(snapshot: Snapshot, opts: ModelOptions): Scored[] {
+  const { globalMedian, globalSamples, byCategory } = calibrate(snapshot.protocols, opts.useMean);
+  const qualifiers = snapshot.protocols.filter(isTokenless);
 
   const scored: Scored[] = qualifiers.map((p) => {
     const entry = p.category !== null ? byCategory.get(p.category) : undefined;
     const multiple = entry ? entry.multiple : globalMedian;
     const multipleSamples = entry ? entry.samples : globalSamples;
     const multipleSource: 'category' | 'global' = entry ? 'category' : 'global';
-    const momF = momentumFactor(p.change_7d);
-    const matF = maturityFactor(p.listed_at, snapshot.as_of);
-    const chainF = chainsFactor(p.chains);
+    const momF = momentumFactor(p.change_7d, opts.momentumWeight);
+    const matF = maturityFactor(p.listed_at, snapshot.as_of, opts.maturity);
+    const chainF = chainsFactor(p.chains, opts.chains);
     const implied = Math.min(
       Math.max(1, Math.round(p.tvl_usd * multiple * momF * matF * chainF)),
       MAX_IMPLIED_USD,
@@ -571,6 +654,126 @@ function buildBoard(snapshot: Snapshot): {
   // Rank by implied value descending; slug ascending breaks ties, so the
   // order is stable and deterministic.
   scored.sort((a, b) => b.implied - a.implied || (a.slug < b.slug ? -1 : a.slug > b.slug ? 1 : 0));
+  return scored;
+}
+
+// Spearman rank correlation between two full rankings of the same slugs.
+// Ranks are unique (ties are broken by slug), so the textbook formula
+// applies directly: rho = 1 - 6 * sum(d^2) / (n * (n^2 - 1)).
+function spearman(baseRank: Map<string, number>, variantRank: Map<string, number>): number {
+  const n = baseRank.size;
+  let sumSq = 0;
+  for (const [slug, base] of baseRank) {
+    const d = base - variantRank.get(slug)!;
+    sumSq += d * d;
+  }
+  return 1 - (6 * sumSq) / (n * (n * n - 1));
+}
+
+// Upgrade C — sensitivity test: re-run the ranking four times, changing one
+// modelling choice per run, and compare each variant with the base ranking.
+// A variant that barely moves the board means the choice it changes is not
+// load-bearing; a variant that scrambles it means the choice matters and
+// the base decision needs its justification (upgrade A) to hold.
+function computeSensitivity(snapshot: Snapshot, baseRanked: Scored[]): SensitivityEntry[] {
+  const baseRank = new Map(baseRanked.map((p, i) => [p.slug, i + 1] as [string, number]));
+  const baseTop10 = new Set(baseRanked.slice(0, 10).map((p) => p.slug));
+  const variants: { variant: string; changed: string; opts: ModelOptions }[] = [
+    {
+      variant: 'mean-multiple',
+      changed: 'per-category MEAN mcap/TVL instead of median (global mean fallback)',
+      opts: { ...BASE_OPTIONS, useMean: true },
+    },
+    {
+      variant: 'no-momentum',
+      changed: 'momentum factor off (all momentum factors = 1)',
+      opts: { ...BASE_OPTIONS, momentumWeight: 0 },
+    },
+    {
+      variant: 'no-maturity',
+      changed: 'maturity factor off (all maturity factors = 1)',
+      opts: { ...BASE_OPTIONS, maturity: false },
+    },
+    {
+      variant: 'no-chains',
+      changed: 'chains factor off (all chains factors = 1)',
+      opts: { ...BASE_OPTIONS, chains: false },
+    },
+  ];
+  return variants.map(({ variant, changed, opts }) => {
+    const ranked = scoreAndSort(snapshot, opts);
+    const variantRank = new Map(ranked.map((p, i) => [p.slug, i + 1] as [string, number]));
+    const moves: number[] = [];
+    for (const [slug, base] of baseRank) moves.push(Math.abs(base - variantRank.get(slug)!));
+    moves.sort((a, b) => a - b);
+    const top10Overlap = ranked.slice(0, 10).filter((p) => baseTop10.has(p.slug)).length;
+    return {
+      variant,
+      changed,
+      spearman_rank_correlation: roundTo(spearman(baseRank, variantRank), 4),
+      top10_overlap: top10Overlap,
+      median_abs_rank_move: median(moves),
+      max_abs_rank_move: moves[moves.length - 1]!,
+      rows_moved: moves.filter((m) => m > 0).length,
+    };
+  });
+}
+
+// Upgrade B — per-category summary: the board rolled up by category,
+// ordered by total implied value, so the reader sees at a glance which
+// categories hold the value and which protocol leads each one.
+function summarizeCategories(rows: BoardRow[]): CategorySummary[] {
+  const byCategory = new Map<string, { tvl: number; implied: number; watchlist: number; top: BoardRow }>();
+  let totalImplied = 0;
+  for (const r of rows) {
+    totalImplied += r.implied_value_usd;
+    const entry = byCategory.get(r.category);
+    if (entry) {
+      entry.tvl += r.tvl_usd;
+      entry.implied += r.implied_value_usd;
+      if (r.watchlist) entry.watchlist += 1;
+    } else {
+      byCategory.set(r.category, {
+        tvl: r.tvl_usd,
+        implied: r.implied_value_usd,
+        watchlist: r.watchlist ? 1 : 0,
+        top: r,
+      });
+    }
+  }
+  // Rows arrive ranked, so the first row seen per category is its leader.
+  const summary: CategorySummary[] = [];
+  const counts = new Map<string, number>();
+  for (const r of rows) counts.set(r.category, (counts.get(r.category) ?? 0) + 1);
+  for (const [category, entry] of byCategory) {
+    summary.push({
+      category,
+      protocols: counts.get(category) ?? 0,
+      total_tvl_usd: entry.tvl,
+      total_implied_usd: entry.implied,
+      share_of_implied: roundTo(entry.implied / totalImplied, 4),
+      watchlist_count: entry.watchlist,
+      top_protocol_slug: entry.top.slug,
+      top_protocol_name: entry.top.name,
+      top_protocol_rank: entry.top.rank,
+      top_protocol_implied_usd: entry.top.implied_value_usd,
+    });
+  }
+  summary.sort((a, b) => b.total_implied_usd - a.total_implied_usd);
+  return summary;
+}
+
+function buildBoard(snapshot: Snapshot): {
+  rows: BoardRow[];
+  calibration: CalibrationEntry[];
+  globalMedian: number;
+  globalSamples: number;
+  categorySummary: CategorySummary[];
+  sensitivity: SensitivityEntry[];
+} {
+  const { globalMedian, globalSamples, byCategory } = calibrate(snapshot.protocols);
+  const watchlist = new Set(snapshot.watchlist);
+  const scored = scoreAndSort(snapshot, BASE_OPTIONS);
 
   const logMin = Math.log10(scored[scored.length - 1]!.implied);
   const logMax = Math.log10(scored[0]!.implied);
@@ -614,7 +817,9 @@ function buildBoard(snapshot: Snapshot): {
     source: 'global',
   });
 
-  return { rows, calibration, globalMedian, globalSamples };
+  const categorySummary = summarizeCategories(rows);
+  const sensitivity = computeSensitivity(snapshot, scored);
+  return { rows, calibration, globalMedian, globalSamples, categorySummary, sensitivity };
 }
 
 // ------------------------------------------------------------------- main
@@ -633,7 +838,7 @@ function main(): void {
   const outDir = process.env['MAKEFUN_OUTPUT_DIR'] ?? 'out';
 
   const snapshot = JSON.parse(readFileSync(inputPath, 'utf8')) as Snapshot;
-  const { rows, calibration, globalMedian, globalSamples } = buildBoard(snapshot);
+  const { rows, calibration, globalMedian, globalSamples, categorySummary, sensitivity } = buildBoard(snapshot);
 
   // Gate guards, loud rather than silent: a board that fails these is not
   // worth writing.
@@ -666,6 +871,8 @@ function main(): void {
     global_median_mcap_tvl: roundTo(globalMedian, 6),
     global_median_samples: globalSamples,
     calibration,
+    category_summary: categorySummary,
+    sensitivity,
     rows,
   };
   writeFileSync(join(outDir, 'board.json'), `${JSON.stringify(board, null, 2)}\n`, 'utf8');
@@ -684,6 +891,8 @@ function main(): void {
     global_median_mcap_tvl: roundTo(globalMedian, 6),
     global_median_samples: globalSamples,
     calibration,
+    category_summary: categorySummary,
+    sensitivity,
     rows,
   };
   cpSync(join(repoRoot, 'dashboard'), join(outDir, 'dashboard'), { recursive: true });

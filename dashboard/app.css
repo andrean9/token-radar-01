@@ -55,6 +55,11 @@ table { width: 100%; border-collapse: collapse; }
 .model b { display: block; font-size: 17px; }
 .model span { color: var(--muted); font-size: 12px; }
 .detail .close { float: right; background: none; border: 1px solid var(--line); color: var(--muted); border-radius: 8px; padding: 5px 10px; cursor: pointer; font: inherit; }
+.cats { padding: 6px 0 4px; }
+.cats h2 { font-size: 20px; margin: 0 0 6px; }
+.cats-lede { color: var(--muted); margin: 0 0 12px; }
+#categorySummary tr { cursor: pointer; }
+#categorySummary tr:hover { background: var(--surface2); }
 .method { padding: 26px 0 10px; border-top: 1px solid var(--line); margin-top: 26px; }
 .method h2 { font-size: 22px; margin: 0 0 10px; }
 .method h3 { font-size: 16px; margin: 22px 0 8px; }

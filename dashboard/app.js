@@ -143,6 +143,45 @@
     return '<tr><td>' + esc(c.category) + '</td><td class="num">' + c.multiple + '&times;</td><td class="num">' + c.samples + '</td><td>' + c.source + '</td></tr>';
   }).join('');
 
+  // ---- category summary (upgrade B): one row per category, ordered by ----
+  // ---- total implied value; selecting a row filters the board. ---------
+  function sharePct(v) { return (v * 100).toFixed(1) + '%'; }
+  if (D.category_summary) {
+    document.getElementById('categorySummary').innerHTML = D.category_summary.map(function (c) {
+      return '<tr data-category="' + esc(c.category) + '">' +
+        '<td><strong>' + esc(c.category) + '</strong></td>' +
+        '<td class="num">' + c.protocols + '</td>' +
+        '<td class="num">' + money(c.total_tvl_usd) + '</td>' +
+        '<td class="num"><strong>' + money(c.total_implied_usd) + '</strong></td>' +
+        '<td class="num">' + sharePct(c.share_of_implied) + '</td>' +
+        '<td class="num">' + c.watchlist_count + '</td>' +
+        '<td>#' + c.top_protocol_rank + ' ' + esc(c.top_protocol_name) + '</td>' +
+        '</tr>';
+    }).join('');
+    document.getElementById('categorySummary').addEventListener('click', function (ev) {
+      var tr = ev.target.closest('tr[data-category]');
+      if (!tr) return;
+      state.category = tr.getAttribute('data-category');
+      document.getElementById('category').value = state.category;
+      renderBoard();
+      document.querySelector('.board').scrollIntoView({ behavior: 'auto', block: 'start' });
+    });
+  }
+
+  // ---- sensitivity (upgrade C): one changed choice per variant. -----------
+  if (D.sensitivity) {
+    document.getElementById('sensitivity').innerHTML = D.sensitivity.map(function (s) {
+      return '<tr><td><strong>' + esc(s.variant) + '</strong></td>' +
+        '<td>' + esc(s.changed) + '</td>' +
+        '<td class="num">' + s.spearman_rank_correlation.toFixed(2) + '</td>' +
+        '<td class="num">' + s.top10_overlap + ' / 10</td>' +
+        '<td class="num">' + s.median_abs_rank_move + '</td>' +
+        '<td class="num">' + s.max_abs_rank_move + '</td>' +
+        '<td class="num">' + s.rows_moved + ' / ' + D.rows.length + '</td>' +
+        '</tr>';
+    }).join('');
+  }
+
   // ---- controls ---------------------------------------------------------------
   document.getElementById('q').addEventListener('input', function (e) { state.q = e.target.value; renderBoard(); });
   document.getElementById('category').addEventListener('change', function (e) { state.category = e.target.value; renderBoard(); });

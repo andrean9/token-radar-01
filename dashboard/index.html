@@ -28,7 +28,15 @@
     </select>
     <p class="count" id="count"></p>
   </section>
-  <section aria-label="Ranked board">
+  <section class="cats" aria-label="Board by category">
+    <h2>Where the value sits</h2>
+    <p class="cats-lede">The board rolled up by category. Risk Curators alone hold over two-fifths of the board&rsquo;s implied value. Select a row to filter the board to that category.</p>
+    <table class="calib">
+      <thead><tr><th>Category</th><th>Protocols</th><th>Total TVL</th><th>Total implied</th><th>Share</th><th>Watchlist</th><th>Top protocol</th></tr></thead>
+      <tbody id="categorySummary"></tbody>
+    </table>
+  </section>
+  <section id="board" aria-label="Ranked board">
     <table class="board">
       <thead><tr>
         <th data-sort="rank">Rank</th>
@@ -56,6 +64,14 @@
       <li><strong>Chains (capped):</strong> +2% per extra chain, up to 6 chains (+10% max).</li>
     </ul>
     <p>The score (0&ndash;100) is the log of the implied value rescaled between the board&rsquo;s min and max, so ranking by score and by implied value always agree. A protocol &ldquo;records no token&rdquo; when DefiLlama records neither a CoinGecko id nor a symbol for it &mdash; the record is not proof that no token exists.</p>
+    <h3>Why the median, not the mean</h3>
+    <p>The ratios the multiples come from are violently skewed: across the 128 token-bearing protocols with mcap data, the global mean mcap/TVL is 5.0386 against a median of 0.2138 &mdash; the mean is 24&times; the median. One protocol&rsquo;s ratio reaches 400.20, and 36 of the 128 ratios sit above 1. A mean multiple would let a handful of tiny-TVL, high-mcap outliers set the price of a whole category: CEX would be priced at 7.8246&times; instead of 0.0748&times;, Basis Trading at 5.6424&times; instead of 0.6544&times;, Lending at 1.8349&times; instead of 0.1324&times;. The median is the middle protocol&rsquo;s ratio &mdash; it moves only when the typical protocol in the category moves, and it is the value a new token in that category would most plausibly resemble. The sensitivity test below measures what the mean would have cost.</p>
+    <h3>Sensitivity test &mdash; one modelling choice changed at a time</h3>
+    <p>The ranking was re-run four times, changing a single choice per run. The mean multiple is the only choice that matters: it moves 194 of 198 rows by a median of 26 ranks and drops the rank correlation to 0.79. The three small factors are nudges, as designed &mdash; switching any one off leaves the top 10 untouched and moves the median row by 1&ndash;2 ranks.</p>
+    <table class="calib">
+      <thead><tr><th>Variant</th><th>Changed</th><th>Rank correlation</th><th>Top 10 kept</th><th>Median move</th><th>Max move</th><th>Rows moved</th></tr></thead>
+      <tbody id="sensitivity"></tbody>
+    </table>
     <h3>Calibration table &mdash; median mcap/TVL by category</h3>
     <table class="calib">
       <thead><tr><th>Category</th><th>Multiple</th><th>Samples</th><th>Source</th></tr></thead>
