@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Token Radar — every tokenless protocol, ranked</title>
+<link rel="stylesheet" href="app.css">
+</head>
+<body>
+<header>
+  <h1>Token Radar</h1>
+  <p class="sub">Every tokenless protocol in the DefiLlama snapshot, ranked by implied token value. <span id="meta-line"></span></p>
+</header>
+
+<section id="controls">
+  <input id="search" type="search" placeholder="Search name or slug…" aria-label="Search protocols">
+  <select id="cat-filter" aria-label="Filter by category"><option value="">All categories</option></select>
+  <select id="chain-filter" aria-label="Filter by chain"><option value="">All chains</option></select>
+  <select id="sort" aria-label="Sort board">
+    <option value="rank">Sort: rank</option>
+    <option value="tvl">Sort: TVL</option>
+    <option value="implied">Sort: implied value</option>
+    <option value="change">Sort: 7-day change</option>
+  </select>
+  <span id="count-line"></span>
+</section>
+
+<section id="categories">
+  <h2>By category <span class="hint">click a row to filter the board</span></h2>
+  <table id="cat-table">
+    <thead><tr><th>Category</th><th>Protocols</th><th>Total TVL</th><th>Implied value</th><th>Share</th><th>Top protocol</th></tr></thead>
+    <tbody></tbody>
+  </table>
+</section>
+
+<main>
+  <section id="board-wrap">
+    <h2>The board</h2>
+    <table id="board">
+      <thead><tr><th>#</th><th>Protocol</th><th>Category</th><th>TVL</th><th>Implied value</th><th>7d</th><th>Score</th></tr></thead>
+      <tbody></tbody>
+    </table>
+  </section>
+
+  <section id="detail" hidden>
+    <h2 id="detail-name"></h2>
+    <div id="detail-body"></div>
+    <h3>How to farm it</h3>
+    <ol id="detail-steps"></ol>
+    <p><a href="#" id="back-link">← Back to the board</a></p>
+  </section>
+
+  <section id="methodology">
+    <h2>Methodology</h2>
+    <h3>Why the median, not the mean</h3>
+    <p id="why-median"></p>
+    <h3>How the ranking works</h3>
+    <p>Implied value = TVL × category multiple × momentum × maturity × chains. The multiple is the median mcap/TVL ratio of token-bearing protocols in the same category (at least 3 samples, otherwise the global median). Momentum is 1 + 0.004 × the 7-day TVL change, capped at ±50%. Maturity is clamped between 0.9 and 1.1 and rises with age since listing, so an old, large, still-tokenless protocol scores higher. Chains adds 2% per extra chain, capped at +10%. Rows rank by implied value; the score is the min-max normalisation of log<sub>10</sub>(implied value), 0–100.</p>
+    <h3>Calibration — median mcap/TVL by category</h3>
+    <table id="cal-table">
+      <thead><tr><th>Category</th><th>Multiple</th><th>Samples</th></tr></thead>
+      <tbody></tbody>
+    </table>
+    <h3>Sensitivity — what actually moves the ranking</h3>
+    <p>Each variant re-runs the ranking with one choice changed. Only the median-vs-mean choice is load-bearing.</p>
+    <table id="sens-table">
+      <thead><tr><th>Variant</th><th>Changed</th><th>Spearman ρ</th><th>Top-10 overlap</th><th>Median move</th><th>Max move</th><th>Rows moved</th></tr></thead>
+      <tbody></tbody>
+    </table>
+  </section>
+</main>
+
+<footer><p>Data: frozen DefiLlama snapshot (see board.json for source and date). No network requests: this page is fully static.</p></footer>
+<script src="rows.js"></script>
+<script src="app.js"></script>
+</body>
+</html>

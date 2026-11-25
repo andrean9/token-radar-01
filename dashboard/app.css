@@ -1,0 +1,33 @@
+:root{--ink:#1a1d21;--mut:#5c6470;--line:#dfe3e8;--bg:#fff;--soft:#f4f6f8;--acc:#0b5fff;--good:#0a7d33;--bad:#b3261e}
+*{box-sizing:border-box}
+body{margin:0 auto;max-width:1180px;padding:20px 18px 40px;font:15px/1.5 system-ui,-apple-system,"Segoe UI",sans-serif;color:var(--ink);background:var(--bg)}
+header h1{margin:0 0 4px;font-size:30px}
+.sub{color:var(--mut);margin:0 0 16px}
+h2{font-size:20px;margin:26px 0 8px}
+h3{font-size:16px;margin:20px 0 6px}
+.hint{font-size:13px;color:var(--mut);font-weight:400}
+#controls{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+#controls input,#controls select{padding:8px 10px;border:1px solid var(--line);border-radius:6px;font:inherit;background:#fff}
+#search{flex:1;min-width:200px}
+#count-line{color:var(--mut);font-size:13px}
+table{border-collapse:collapse;width:100%}
+th,td{padding:7px 9px;border-bottom:1px solid var(--line);text-align:left;vertical-align:top}
+th{font-size:12px;text-transform:uppercase;letter-spacing:.04em;color:var(--mut)}
+tbody tr{cursor:pointer}
+tbody tr:hover{background:var(--soft)}
+#cat-table tbody tr.active{background:#e8f0ff}
+td.num,th.num{text-align:right;font-variant-numeric:tabular-nums}
+.up{color:var(--good)}.down{color:var(--bad)}
+.watch{color:var(--acc);font-weight:700}
+#detail{background:var(--soft);border:1px solid var(--line);border-radius:8px;padding:16px 18px;margin-top:22px}
+#detail dl{display:grid;grid-template-columns:190px 1fr;gap:4px 12px;margin:0}
+#detail dt{color:var(--mut)}#detail dd{margin:0}
+#detail-steps li{margin-bottom:8px}
+#methodology p{max-width:78ch}
+footer{color:var(--mut);font-size:13px;margin-top:30px;border-top:1px solid var(--line);padding-top:12px}
+a{color:var(--acc)}
+body.shot-detail header,body.shot-detail #controls,body.shot-detail #categories,body.shot-detail #board-wrap,body.shot-detail #methodology,body.shot-detail footer{display:none}
+body.shot-detail #detail{margin-top:0}
+body.shot-methodology header,body.shot-methodology #controls,body.shot-methodology #categories,body.shot-methodology #board-wrap,body.shot-methodology #detail,body.shot-methodology footer{display:none}
+body.shot-methodology #methodology h2{margin-top:0}
+@media (max-width:720px){#detail dl{grid-template-columns:1fr}}
