@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Token Radar — which pre-token protocol is worth farming next</title>
+<link rel="stylesheet" href="app.css">
+</head>
+<body>
+<header class="hero">
+  <p class="eyebrow">Token Radar &middot; DefiLlama snapshot 2026-11-14</p>
+  <h1>Which pre-token protocol is worth farming next?</h1>
+  <p class="lede">Every protocol below records no token yet. Each one is ranked by its
+  implied value: what a token launch would be worth if the protocol&rsquo;s record
+  stayed as it is. Implied value is this entry&rsquo;s own claim, never a fact
+  about a future launch.</p>
+  <div class="kpis">
+    <div class="kpi"><span class="kpi-num" id="kpi-protocols">&ndash;</span><span class="kpi-label">protocols ranked</span></div>
+    <div class="kpi"><span class="kpi-num" id="kpi-watchlist">&ndash;</span><span class="kpi-label">watchlist covered</span></div>
+    <div class="kpi"><span class="kpi-num" id="kpi-implied">&ndash;</span><span class="kpi-label">total implied value</span></div>
+    <div class="kpi"><span class="kpi-num" id="kpi-median">&ndash;</span><span class="kpi-label">global median multiple</span></div>
+  </div>
+</header>
+
+<main>
+  <section id="detail" class="detail" hidden></section>
+
+  <section class="controls" aria-label="Board controls">
+    <input id="search" type="search" placeholder="Search a protocol&hellip;" autocomplete="off">
+    <select id="category-filter" aria-label="Filter by category"><option value="">All categories</option></select>
+    <select id="chain-filter" aria-label="Filter by chain"><option value="">All chains</option></select>
+    <select id="sort" aria-label="Sort the board">
+      <option value="rank">Sort: rank</option>
+      <option value="implied">Sort: implied value</option>
+      <option value="tvl">Sort: TVL</option>
+      <option value="change">Sort: 7-day change</option>
+    </select>
+    <span id="count" class="count"></span>
+  </section>
+
+  <section class="board-wrap">
+    <table class="board">
+      <thead>
+        <tr>
+          <th>Rank</th><th>Protocol</th><th>Category</th><th>Chains</th>
+          <th>TVL</th><th>7d</th><th>Implied value</th><th>Score</th>
+        </tr>
+      </thead>
+      <tbody id="board-body"></tbody>
+    </table>
+    <p class="hint">Click a row to open its detail view and farm plan. Click a category
+    in the panel below to filter the board; click it again to reset.</p>
+  </section>
+
+  <section class="categories">
+    <h2>Category summary</h2>
+    <p class="note">Share of implied value is a share of this board&rsquo;s total
+    implied value. It is <strong>not</strong> a probability that any protocol
+    launches a token.</p>
+    <table class="cat-table">
+      <thead>
+        <tr>
+          <th>Category</th><th>Protocols</th><th>Total TVL</th>
+          <th>Total implied</th><th>Share of implied value</th><th>Top protocol</th>
+        </tr>
+      </thead>
+      <tbody id="category-body"></tbody>
+    </table>
+    <button id="reset-category" type="button">All categories</button>
+  </section>
+
+  <section class="method" id="methodology">
+    <h2>Methodology</h2>
+    <h3>The model</h3>
+    <p>Implied value = TVL &times; multiple &times; momentum &times; maturity &times; chains.
+    The multiple is the category&rsquo;s median market-cap-to-TVL ratio among
+    token-bearing protocols in the snapshot (at least 3 samples, otherwise the
+    global median). Momentum is 1 + 0.004 &times; the 7-day TVL change, capped at
+    &plusmn;50%. Maturity is 0.9 + 0.2 &times; days since listing, capped at 3 years.
+    Chains is 1 + 0.02 per extra chain, capped at 5 extra chains. The score is
+    the implied value on a log scale from 0 to 100.</p>
+    <h3>Why the median, not the mean</h3>
+    <p>The snapshot&rsquo;s mcap/TVL ratios are wildly skewed: the global mean is
+    5.0386 while the global median is 0.2138, and the largest ratio is 400.20.
+    One outlier would dominate a mean. The CEX category shows the same skew:
+    mean 7.8246 against a median of 0.0748. The median is the typical
+    token-bearing protocol; the mean is the outlier.</p>
+    <h3>Calibration</h3>
+    <table class="cal-table">
+      <thead><tr><th>Category</th><th>Multiple</th><th>Samples</th><th>Source</th></tr></thead>
+      <tbody id="calibration-body"></tbody>
+    </table>
+    <h3>Sensitivity: what moves the ranking?</h3>
+    <p>The ranking is re-run four times from the snapshot, changing one choice
+    per run. Only the mean-vs-median choice is load-bearing. The other three
+    factors are nudges.</p>
+    <table class="sens-table">
+      <thead><tr><th>Variant</th><th>Spearman</th><th>Top-10 overlap</th><th>Median move</th><th>Max move</th></tr></thead>
+      <tbody id="sensitivity-body"></tbody>
+    </table>
+    <h3>Limitations</h3>
+    <ul>
+      <li>No shrinkage: a category with only 3 samples uses its median directly.</li>
+      <li>No out-of-sample predictive validation: nothing here is tested against
+      launches that happened after the snapshot.</li>
+      <li>Sensitivity measures stability of the ranking under changed assumptions,
+      not predictive accuracy.</li>
+      <li>Categories with fewer than 3 calibrating samples fall back to the
+      global median.</li>
+      <li>A protocol &ldquo;records no token&rdquo; in DefiLlama&rsquo;s record; that is
+      not proof it has none.</li>
+    </ul>
+  </section>
+</main>
+
+<footer>
+  <p>Token Radar, built for the token-radar-01 bounty. Snapshot: DefiLlama
+  protocols, 2026-11-14. Farm steps name a cost and a time for every step;
+  amounts are small on purpose.</p>
+</footer>
+
+<script src="rows.js"></script>
+<script src="app.js"></script>
+</body>
+</html>
