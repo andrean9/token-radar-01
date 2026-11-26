@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Token Radar — pre-token protocols ranked by implied value</title>
+<link rel="stylesheet" href="app.css">
+</head>
+<body>
+<header class="hero">
+  <p class="eyebrow">Token Radar</p>
+  <h1>Which pre-token protocol is worth farming next?</h1>
+  <p class="lede">Every protocol in the snapshot that records no token, ranked by
+  implied token value: its TVL times the median market-cap-to-TVL ratio
+  of token-bearing protocols in the same category. Share of implied value
+  is a share of this board's total — it is not a probability that a token
+  launches.</p>
+  <div class="kpis">
+    <div class="kpi"><span class="kpi-num" id="kpi-protocols">–</span><span class="kpi-label">Protocols ranked</span></div>
+    <div class="kpi"><span class="kpi-num" id="kpi-watchlist">–</span><span class="kpi-label">Watchlist covered</span></div>
+    <div class="kpi"><span class="kpi-num" id="kpi-implied">–</span><span class="kpi-label">Total implied value</span></div>
+    <div class="kpi"><span class="kpi-num" id="kpi-median">–</span><span class="kpi-label">Global median mcap / TVL</span></div>
+  </div>
+</header>
+<main>
+  <div class="controls">
+    <input id="search" type="search" placeholder="Search name, slug or category…" aria-label="Search protocols">
+    <select id="category-filter" aria-label="Filter by category"><option value="">All categories</option></select>
+    <select id="chain-filter" aria-label="Filter by chain"><option value="">All chains</option></select>
+    <select id="sort" aria-label="Sort board">
+      <option value="rank">Sort: rank</option>
+      <option value="implied">Sort: implied value</option>
+      <option value="tvl">Sort: TVL</option>
+      <option value="change">Sort: 7-day change</option>
+    </select>
+    <span class="count" id="count"></span>
+  </div>
+  <section id="detail" class="detail" hidden></section>
+  <div class="board-wrap">
+    <table class="board">
+      <thead><tr>
+        <th>#</th><th>Protocol</th><th>Category</th><th>Chains</th>
+        <th class="num">TVL</th><th class="num">7d</th>
+        <th class="num">Implied value</th><th class="num">Score</th>
+      </tr></thead>
+      <tbody id="board-body"></tbody>
+    </table>
+  </div>
+  <p class="hint">Click a row for its farm plan and model reasoning. Click a category
+  below to filter the board; click it again to clear the filter.</p>
+
+  <section class="categories" id="categories">
+    <h2>Categories</h2>
+    <p class="note">Share of implied value is each category's share of the board's
+    total implied value. It is not a probability of a token launch.</p>
+    <div class="board-wrap">
+      <table class="cat-table">
+        <thead><tr>
+          <th>Category</th><th>Protocols</th>
+          <th class="num">Total TVL</th><th class="num">Total implied</th>
+          <th class="num">Share of implied value</th><th>Top protocol</th>
+        </tr></thead>
+        <tbody id="category-body"></tbody>
+      </table>
+    </div>
+    <button id="reset-category" type="button">Show all categories</button>
+  </section>
+
+  <section class="method" id="methodology">
+    <h2>Methodology</h2>
+    <h3>Why the median, not the mean</h3>
+    <p>The mcap/TVL ratios are wildly skewed. Across the 128 token-bearing
+    protocols that calibrate the model, the global mean ratio is
+    <strong id="why-mean">–</strong> while the median is
+    <strong id="why-median">–</strong> and the largest single ratio is
+    <strong id="why-max">–</strong>. A mean would let a handful of outliers
+    set every category's multiple. The CEX category shows the same skew
+    from the other side: mean <strong id="why-cex-mean">–</strong> against a
+    median of <strong id="why-cex-median">–</strong>. The median is the
+    typical protocol; the mean is the loudest one.</p>
+    <h3>The model</h3>
+    <ul>
+      <li><strong>Multiple.</strong> Per category, the median mcap/TVL of its
+      token-bearing protocols (at least 3 samples, otherwise the global
+      median). One shared predicate decides which protocols calibrate,
+      for the table below and for the diagnostics alike.</li>
+      <li><strong>Implied value.</strong> TVL × multiple, adjusted by
+      momentum (1 + 0.4 × 7-day change, capped at ±50%), maturity
+      (0.9 + 0.2 × days since listing / 1095, capped at 3 years; a
+      missing listing date is neutral), and chain diversification
+      (+0.02 per extra chain, capped at +0.10). The maturity date
+      comes from the snapshot itself, and the implied value is capped
+      at $100,000,000,000,000.</li>
+      <li><strong>Score.</strong> log10 of the implied value, stretched
+      0–100 across the board. Rank follows implied value.</li>
+    </ul>
+    <h3>Calibration</h3>
+    <div class="board-wrap">
+      <table>
+        <thead><tr><th>Category</th><th class="num">Multiple</th><th class="num">Samples</th><th>Source</th></tr></thead>
+        <tbody id="calibration-body"></tbody>
+      </table>
+    </div>
+    <h3>Sensitivity — stability, not accuracy</h3>
+    <p>Re-ranking with one assumption changed at a time. The mean
+    multiple is the only load-bearing choice; momentum, maturity and
+    chain count are small nudges. This measures how stable the ranking
+    is under changed assumptions. It does not prove the ranking
+    predicts future launches.</p>
+    <div class="board-wrap">
+      <table>
+        <thead><tr><th>Variant</th><th class="num">Spearman ρ</th><th class="num">Top-10 kept</th><th class="num">Median move</th><th class="num">Max move</th></tr></thead>
+        <tbody id="sensitivity-body"></tbody>
+      </table>
+    </div>
+    <h3>Limits of this model</h3>
+    <ul>
+      <li>No shrinkage: a category with only 3 samples uses its median
+      directly, and small categories are noisier for it.</li>
+      <li>No out-of-sample predictive validation: nothing here proves
+      this ranking predicts which protocols will launch a token, or
+      what it will be worth.</li>
+      <li>Sensitivity is stability, not accuracy: a ranking can be
+      stable under changed assumptions and still be wrong.</li>
+      <li>Share of implied value is a share of this board's total. It
+      is not a probability of a token launch.</li>
+    </ul>
+  </section>
+</main>
+<footer>
+  Token Radar — built from the sealed DefiLlama snapshot of 2026-11-14.
+  198 tokenless protocols, 40 on the watchlist. No network requests:
+  this page reads only its own data file.
+</footer>
+<script src="rows.js"></script>
+<script src="app.js"></script>
+</body>
+</html>

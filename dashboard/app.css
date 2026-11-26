@@ -1,0 +1,156 @@
+:root {
+  --bg: #0b1020;
+  --surface: #121a2e;
+  --surface2: #182238;
+  --line: #26304d;
+  --text: #e8ecf4;
+  --muted: #9aa7c0;
+  --accent: #f2b33d;
+  --green: #3ddc84;
+  --red: #ff6b6b;
+}
+
+* { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--text);
+  font-family: -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  font-size: 15px;
+  line-height: 1.5;
+}
+
+.hero {
+  padding: 36px 28px 28px;
+  background: linear-gradient(180deg, #141d38, var(--bg));
+  border-bottom: 1px solid var(--line);
+}
+
+.eyebrow {
+  margin: 0 0 8px;
+  color: var(--accent);
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.hero h1 {
+  margin: 0 0 10px;
+  font-size: 34px;
+  line-height: 1.15;
+  max-width: 780px;
+}
+
+.lede { margin: 0; max-width: 780px; color: var(--muted); }
+
+.kpis {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-top: 22px;
+}
+
+.kpi {
+  min-width: 150px;
+  flex: 1;
+  padding: 14px 16px;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 10px;
+}
+
+.kpi-num { display: block; font-size: 24px; font-weight: 800; color: var(--accent); }
+.kpi-label { font-size: 12px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.06em; }
+
+main { padding: 20px 28px 8px; }
+
+.controls {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  align-items: center;
+  margin: 4px 0 14px;
+}
+
+.controls input, .controls select {
+  padding: 9px 12px;
+  background: var(--surface);
+  color: var(--text);
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  font-size: 14px;
+}
+
+.controls input { flex: 2; min-width: 200px; }
+.controls select { flex: 1; min-width: 140px; }
+.count { color: var(--muted); font-size: 13px; }
+
+table { width: 100%; border-collapse: collapse; }
+th, td { padding: 9px 10px; text-align: left; border-bottom: 1px solid var(--line); }
+th { color: var(--muted); font-size: 12px; text-transform: uppercase; letter-spacing: 0.05em; }
+td.num, th.num { text-align: right; font-variant-numeric: tabular-nums; }
+
+.board-wrap { overflow-x: auto; }
+.board tbody tr { cursor: pointer; }
+.board tbody tr:hover { background: var(--surface2); }
+.board tbody tr.active { background: var(--surface2); outline: 1px solid var(--accent); }
+.pos { color: var(--green); }
+.neg { color: var(--red); }
+.watch { color: var(--accent); font-size: 12px; font-weight: 700; }
+
+.hint { color: var(--muted); font-size: 13px; }
+
+.detail {
+  margin: 0 0 18px;
+  padding: 20px;
+  background: var(--surface);
+  border: 1px solid var(--accent);
+  border-radius: 12px;
+}
+
+.detail h2 { margin: 0 0 4px; font-size: 24px; }
+.detail .meta { color: var(--muted); font-size: 13px; margin: 0 0 12px; }
+.detail dl {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: 8px 16px;
+  margin: 0 0 12px;
+}
+.detail dt { color: var(--muted); font-size: 12px; text-transform: uppercase; }
+.detail dd { margin: 0; font-weight: 700; }
+.detail ol { margin: 8px 0 0; padding-left: 20px; }
+.detail ol li { margin-bottom: 6px; }
+.detail .close { float: right; background: none; border: 1px solid var(--line); color: var(--muted); border-radius: 6px; padding: 4px 10px; cursor: pointer; }
+
+.categories, .method { margin: 28px 0; }
+.categories h2, .method h2 { font-size: 22px; margin-bottom: 6px; }
+.method h3 { font-size: 16px; margin: 20px 0 6px; color: var(--accent); }
+.note { color: var(--muted); font-size: 13px; }
+.cat-table tbody tr { cursor: pointer; }
+.cat-table tbody tr:hover, .cat-table tbody tr.active { background: var(--surface2); }
+#reset-category {
+  margin-top: 12px;
+  padding: 8px 14px;
+  background: var(--surface2);
+  color: var(--text);
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  cursor: pointer;
+}
+
+.method p, .method li { max-width: 860px; color: var(--text); }
+.method ul { padding-left: 20px; }
+
+footer {
+  padding: 18px 28px 28px;
+  color: var(--muted);
+  font-size: 13px;
+  border-top: 1px solid var(--line);
+}
+
+@media (max-width: 700px) {
+  .hero h1 { font-size: 26px; }
+  main, .hero { padding-left: 14px; padding-right: 14px; }
+}
