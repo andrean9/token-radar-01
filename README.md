@@ -1,8 +1,10 @@
 # Token Radar
 
-[![token-radar-01 on make.fun](https://make.fun/c/token-radar-01/badge.svg)](https://make.fun/c/token-radar-01)
+[![make.fun · token-radar-01](https://make.fun/badge/token-radar-01.svg)](https://make.fun/bounty/token-radar-01?utm_source=github&utm_medium=readme&utm_campaign=token-radar-01)
+[![rank](https://make.fun/badge/token-radar-01/andrean9/token-radar-01/rank.svg)](https://make.fun/bounty/token-radar-01/leaderboard?utm_source=github&utm_medium=readme&utm_campaign=token-radar-01)
+[![reward](https://make.fun/badge/token-radar-01/andrean9/token-radar-01/reward.svg)](https://make.fun/bounty/token-radar-01?utm_source=github&utm_medium=readme&utm_campaign=token-radar-01)
 
-Built for the [token-radar-01 bounty on make.fun](https://make.fun/c/token-radar-01):
+Built for the [token-radar-01 bounty on make.fun](https://make.fun/bounty/token-radar-01):
 build the best token launch radar. The program reads a sealed snapshot of
 every protocol DefiLlama tracks, finds the ones that record no token, and
 ranks them by what their launch would be worth — then shows the board, a
