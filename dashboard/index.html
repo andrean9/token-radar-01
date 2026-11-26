@@ -1,0 +1,123 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Token Radar — which pre-token protocol is worth farming next</title>
+<link rel="stylesheet" href="app.css">
+</head>
+<body>
+<header class="hero">
+  <div class="hero-inner">
+    <p class="kicker">Token launch radar &middot; snapshot <span id="asOf"></span></p>
+    <h1>Which pre-token protocol is worth farming next?</h1>
+    <p class="lede">Every protocol in the snapshot that records no token, ranked by
+    what its launch would be worth &mdash; a calibrated implied value, not a
+    TVL table &mdash; each with a concrete plan to farm it.</p>
+    <div class="kpis">
+      <div class="kpi"><span class="kpi-num" id="kpiRows"></span><span class="kpi-label">protocols ranked</span></div>
+      <div class="kpi"><span class="kpi-num" id="kpiWatch"></span><span class="kpi-label">watchlist covered</span></div>
+      <div class="kpi"><span class="kpi-num" id="kpiTotal"></span><span class="kpi-label">total implied value</span></div>
+      <div class="kpi"><span class="kpi-num" id="kpiMedian"></span><span class="kpi-label">global median mcap / TVL</span></div>
+    </div>
+  </div>
+</header>
+
+<main>
+  <section class="controls" aria-label="Filters">
+    <input id="search" type="search" placeholder="Search a protocol&hellip;" autocomplete="off">
+    <select id="categoryFilter" aria-label="Filter by category"></select>
+    <select id="chainFilter" aria-label="Filter by chain"></select>
+    <select id="sortBy" aria-label="Sort by">
+      <option value="rank">Sort: rank</option>
+      <option value="tvl">Sort: TVL</option>
+      <option value="implied">Sort: implied value</option>
+      <option value="change">Sort: 7-day change</option>
+    </select>
+    <span id="resultCount" class="count"></span>
+  </section>
+
+  <section id="detail" class="detail" hidden></section>
+
+  <section class="board-wrap">
+    <table class="board">
+      <thead>
+        <tr>
+          <th data-sort="rank">Rank</th>
+          <th data-sort="name">Protocol</th>
+          <th>Category</th>
+          <th data-sort="tvl">TVL</th>
+          <th data-sort="change">7d</th>
+          <th data-sort="implied">Implied value</th>
+          <th>Share of implied value</th>
+          <th data-sort="score">Score</th>
+        </tr>
+      </thead>
+      <tbody id="boardBody"></tbody>
+    </table>
+    <p class="note">Share of implied value is a share of the board&rsquo;s total
+    implied value. It is <strong>not</strong> a probability that the protocol
+    launches a token. A protocol &ldquo;records no token&rdquo; in DefiLlama&rsquo;s
+    data; that is not proof it has none.</p>
+  </section>
+
+  <section class="cats">
+    <h2>By category</h2>
+    <p class="muted">Click a row to filter the board to that category. Click it
+    again to clear the filter.</p>
+    <table class="cat-table">
+      <thead><tr><th>Category</th><th>Protocols</th><th>Total implied</th><th>Share of implied value</th><th>Top protocol</th></tr></thead>
+      <tbody id="catBody"></tbody>
+    </table>
+    <button id="clearCats" type="button">All categories</button>
+  </section>
+
+  <section id="methodology" class="method">
+    <h2>Methodology</h2>
+    <h3>Why the median, not the mean</h3>
+    <p id="whyMedian"></p>
+    <h3>The model</h3>
+    <p>Each protocol&rsquo;s implied value is
+    <code>TVL &times; multiple &times; momentum &times; maturity &times; chains</code>,
+    capped at $100,000,000,000,000 and floored at $1. The multiple is the
+    median mcap/TVL ratio of token-bearing protocols in the same category
+    (at least 3 samples, otherwise the global median). Momentum is
+    <code>1 + 0.004 &times; 7-day change</code>, change clamped to &plusmn;50%.
+    Maturity is <code>0.9 + 0.2 &times; age / 3 years</code>, age capped at 3
+    years, and 1 when no listing date is recorded. Chains is
+    <code>1 + 0.02 per extra chain</code>, capped at 5 extra chains. The
+    score is the log-scaled implied value, 0 to 100.</p>
+    <h3>Calibration</h3>
+    <table class="cal-table">
+      <thead><tr><th>Category</th><th>Multiple</th><th>Samples</th><th>Source</th></tr></thead>
+      <tbody id="calBody"></tbody>
+    </table>
+    <h3>Sensitivity: what the ranking depends on</h3>
+    <p>Each variant re-ranks the board with one choice changed. The
+    mean-multiple variant is the only load-bearing choice; the three
+    factors are small nudges. Sensitivity measures stability of the
+    ranking under changed assumptions, not predictive accuracy.</p>
+    <table class="sens-table">
+      <thead><tr><th>Variant</th><th>What changed</th><th>Spearman &rho;</th><th>Top-10 overlap</th><th>Median rank move</th><th>Max move</th><th>Rows moved</th></tr></thead>
+      <tbody id="sensBody"></tbody>
+    </table>
+    <h3>Limits</h3>
+    <ul>
+      <li>No shrinkage: a category with exactly 3 samples uses its median directly.</li>
+      <li>No out-of-sample predictive validation: nothing here predicts whether or when a token launches.</li>
+      <li>The snapshot is frozen; a protocol that launched after the snapshot still ranks as tokenless here.</li>
+      <li>Implied value is this entry&rsquo;s own claim, never make.fun&rsquo;s.</li>
+    </ul>
+  </section>
+</main>
+
+<footer class="foot">
+  <p>Token Radar &middot; built from the sealed DefiLlama snapshot of
+  <span id="footAsOf"></span> &middot; 198 tokenless protocols &middot;
+  dashboard renders with no network.</p>
+</footer>
+
+<script src="rows.js"></script>
+<script src="app.js"></script>
+</body>
+</html>
